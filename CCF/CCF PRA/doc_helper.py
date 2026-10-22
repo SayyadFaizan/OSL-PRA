@@ -1,4 +1,6 @@
 import os
+import subprocess
+import tempfile
 import matplotlib.pyplot as plt
 import docx
 from docx.shared import Inches, Pt, RGBColor
@@ -12,6 +14,29 @@ Class/Batch: TE CO - I 03
 Roll No.: 24DCO11
 Subject: Cloud Computing & Frameworks (CCF)
 """
+
+def render_html_to_screenshot(html_content, output_path, width=900, height=500):
+    """
+    Renders HTML content to a PNG image using headless Google Chrome.
+    """
+    with tempfile.NamedTemporaryFile('w', suffix='.html', delete=False) as f:
+        f.write(html_content)
+        temp_html_path = f.name
+
+    try:
+        cmd = [
+            'google-chrome',
+            '--headless',
+            '--disable-gpu',
+            '--no-sandbox',
+            f'--window-size={width},{height}',
+            f'--screenshot={output_path}',
+            temp_html_path
+        ]
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    finally:
+        if os.path.exists(temp_html_path):
+            os.remove(temp_html_path)
 
 def create_terminal_image(title, command_text, output_text, output_path, width_px=800, height_px=400, prompt_user="ubuntu@cloud-vm:~$"):
     fig, ax = plt.subplots(figsize=(width_px/100, height_px/100), dpi=100)
@@ -36,35 +61,6 @@ def create_terminal_image(title, command_text, output_text, output_path, width_p
     safe_content = display_content.replace('$', '\\$')
 
     ax.text(0.02, 0.85, safe_content, color='#00ff66', fontsize=9.5, family='monospace', verticalalignment='top', transform=ax.transAxes)
-
-    plt.tight_layout()
-    plt.savefig(output_path, bbox_inches='tight', pad_inches=0.1, facecolor=fig.get_facecolor(), edgecolor='none')
-    plt.close()
-
-def create_gui_image(title, subtitle, content_lines, output_path, width_px=800, height_px=450):
-    fig, ax = plt.subplots(figsize=(width_px/100, height_px/100), dpi=100)
-    fig.patch.set_facecolor('#f0f2f5')
-    ax.set_facecolor('#ffffff')
-    ax.axis('off')
-
-    # Window Header Bar
-    ax.text(0.02, 0.94, f"🌐  {title} — {subtitle}", color='#1e293b', fontsize=12, fontweight='bold', family='sans-serif', transform=ax.transAxes)
-    ax.plot([0, 1], [0.89, 0.89], color='#cbd5e1', transform=ax.transAxes, linewidth=1.5)
-
-    y_pos = 0.82
-    for line in content_lines:
-        if line.startswith('[HEADER]'):
-            ax.text(0.04, y_pos, line.replace('[HEADER]', ''), color='#0f172a', fontsize=11, fontweight='bold', family='sans-serif', transform=ax.transAxes)
-            y_pos -= 0.06
-        elif line.startswith('[STATUS]'):
-            ax.text(0.04, y_pos, line.replace('[STATUS]', ''), color='#16a34a', fontsize=10, fontweight='bold', family='sans-serif', transform=ax.transAxes)
-            y_pos -= 0.05
-        elif line.startswith('[CODE]'):
-            ax.text(0.06, y_pos, line.replace('[CODE]', ''), color='#2563eb', fontsize=9.5, family='monospace', transform=ax.transAxes)
-            y_pos -= 0.05
-        else:
-            ax.text(0.04, y_pos, line, color='#334155', fontsize=10, family='sans-serif', transform=ax.transAxes)
-            y_pos -= 0.05
 
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches='tight', pad_inches=0.1, facecolor=fig.get_facecolor(), edgecolor='none')
@@ -130,4 +126,4 @@ def add_cover_page(doc, exp_num, exp_title):
 
     doc.add_page_break()
 
-print("CCF PRA Helper module created.")
+print("Headless Chrome doc_helper module initialized.")
